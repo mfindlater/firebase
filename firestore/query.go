@@ -2,7 +2,6 @@ package firestore
 
 import "github.com/gopherjs/gopherjs/js"
 
-// Query refers to a Query which you can read or listen to. You can also construct refined Query objects by adding filters and ordering.
 type Query struct {
 	*js.Object
 }

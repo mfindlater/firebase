@@ -44,14 +44,12 @@ func Name(name string) func(*App) {
 	}
 }
 
-//App a Firebase App holds the initialization information for a collection of services.
 type App struct {
 	*js.Object
 	options map[string]string
 	Name    string
 }
 
-//Delete renders this app unusable and frees the resources of all associated services.
 func (a *App) Delete() *Promise {
 	return &Promise{Object: a.Object.Call("delete")}
 }
