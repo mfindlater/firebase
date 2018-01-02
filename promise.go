@@ -6,24 +6,33 @@ type Promise struct {
 	*js.Object
 }
 
-func (p *Promise) Then(args ...func()) *Promise {
+func (p *Promise) All(values ...interface{}) *Promise {
+	return &Promise{p.Call("all", values)}
+}
+
+func (p *Promise) Reject(err interface{}) *Promise {
+	return &Promise{p.Call("reject", err)}
+}
+
+func (p *Promise) Resolve(value interface{}) *Promise {
+	return &Promise{p.Call("resolve", value)}
+}
+
+func (p *Promise) Catch(onReject ...interface{}) *Promise {
+	return &Promise{p.Call("catch", onReject)}
+}
+
+func (p *Promise) Then(args ...interface{}) *Promise {
 	if len(args) == 1 {
 		onResolve := args[0]
-		p.Object.Call("then", onResolve)
-		return p
+		return &Promise{p.Call("then", onResolve)}
 	}
 
 	if len(args) == 2 {
 		onResolve := args[0]
 		onReject := args[1]
-		p.Object.Call("then", onResolve, onReject)
-		return p
+		return &Promise{p.Call("then", onResolve, onReject)}
 	}
 
-	p.Object.Call("then")
-	return p
-}
-
-func (p *Promise) Catch(catch func(*js.Error)) {
-	p.Object.Call("catch", catch)
+	return &Promise{p.Call("then")}
 }
