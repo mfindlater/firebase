@@ -6,26 +6,57 @@ import (
 	"github.com/gopherjs/gopherjs/js"
 )
 
-type App struct {
+const SDKVersion = "4.8.1"
+
+type Options struct {
 	*js.Object
-	Name    string            `js:"name"`
-	Options map[string]string `js:"options"`
+	APIKey            string `js:"apiKey"`
+	AuthDomain        string `js:"authDomain"`
+	DatabaseURL       string `js:"databaseURL"`
+	StorageBucket     string `js:"storageBucket"`
+	MessagingSenderID string `js:"messagingSenderId"`
 }
 
-func NewApp(apiKey string, opts ...func(*App)) (*App, error) {
+type App struct {
+	*js.Object
+	Name    string   `js:"name"`
+	Options *Options `js:"options"`
+}
+
+func NewApp(options *Options, opts ...func(*App)) (*App, error) {
 
 	f, err := getFirebase()
 	if err != nil {
 		return nil, err
 	}
 
-	a := &App{Options: make(map[string]string)}
+	obj := js.Global.Get("Object").New()
+
+	if options.APIKey != "" {
+		obj.Set("apiKey", options.APIKey)
+	}
+
+	if options.AuthDomain != "" {
+		obj.Set("authDomain", options.AuthDomain)
+	}
+
+	if options.DatabaseURL != "" {
+		obj.Set("databaseURL", options.DatabaseURL)
+	}
+
+	if options.StorageBucket != "" {
+		obj.Set("storageBucket", options.StorageBucket)
+	}
+
+	if options.MessagingSenderID != "" {
+		obj.Set("messagingSenderId", options.MessagingSenderID)
+	}
+
+	a := &App{Options: &Options{Object: obj}}
 
 	for _, option := range opts {
 		option(a)
 	}
-
-	a.Options["apiKey"] = apiKey
 
 	if a.Name != "" {
 		a.Object = f.Call("initializeApp", a.Options, a.Name)
@@ -38,38 +69,30 @@ func NewApp(apiKey string, opts ...func(*App)) (*App, error) {
 	return a, nil
 }
 
-func (a *App) Delete() *Promise {
-	return &Promise{Object: a.Object.Call("delete")}
+func (a *App) Delete() error {
+
+	p := &Promise{Object: a.Object.Call("delete")}
+
+	r := func() error {
+		hasError := false
+		errorToReturn := &Error{}
+		p.Then(func() {
+			hasError = false
+		}).Catch(func(e *Error) {
+			errorToReturn = e
+		})
+
+		if hasError {
+			return errorToReturn
+		}
+
+		return nil
+	}()
+
+	return r
 }
 
-type Options struct {
-}
-
-func (o Options) AuthDomain(authDomain string) func(*App) {
-	return func(a *App) {
-		a.Options["authDomain"] = authDomain
-	}
-}
-
-func (o Options) DatabaseURL(databaseURL string) func(*App) {
-	return func(a *App) {
-		a.Options["databaseURL"] = databaseURL
-	}
-}
-
-func (o Options) StorageBucket(storageBucket string) func(*App) {
-	return func(a *App) {
-		a.Options["storageBucket"] = storageBucket
-	}
-}
-
-func (o Options) MessagingSenderID(messagingSenderID string) func(*App) {
-	return func(a *App) {
-		a.Options["messagingSender"] = messagingSenderID
-	}
-}
-
-func (o Options) Name(name string) func(*App) {
+func Name(name string) func(*App) {
 	return func(a *App) {
 		a.Name = name
 	}

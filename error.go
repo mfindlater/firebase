@@ -7,3 +7,7 @@ import (
 type Error struct {
 	*js.Object
 }
+
+func (e Error) Error() string {
+	return e.String()
+}
