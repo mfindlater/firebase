@@ -43,8 +43,20 @@ type User struct {
 	RefreshToken  string        `js:"refreshToken"`
 }
 
+type AdditionalUserInfo struct {
+	*js.Object
+	ProviderID string     `js:"providerId"`
+	Profile    *js.Object `js:"profile"`
+	Username   string     `js:"username"`
+	IsNewUser  bool       `js:"isNewUser"`
+}
+
 type UserCredential struct {
 	*js.Object
+	User               *User               `js:"user"`
+	Credential         *AuthCredential     `js:"credential"`
+	OperationType      string              `js:"operationType"`
+	AdditionalUserInfo *AdditionalUserInfo `js:"additionalUserInfo"`
 }
 
 type AuthCredential struct {
@@ -61,10 +73,22 @@ type OAuthCredential struct {
 
 type ConfirmationResult struct {
 	*js.Object
+	VerificationID string `js:"verificationId"`
+}
+
+func (c *ConfirmationResult) Confirm(verificationCode string) (*UserCredential, error) {
+	o, err := (&Promise{Object: c.Call("confirm", verificationCode)}).ConvertWithResult()
+	return &UserCredential{Object: o}, err
 }
 
 type ApplicationVerifier struct {
 	*js.Object
+	Type string `js:"type"`
+}
+
+func (a *ApplicationVerifier) Verify() (string, error) {
+	o, err := (&Promise{Object: a.Call("verify")}).ConvertWithResult()
+	return o.String(), err
 }
 
 type ActionCodeInfo struct {
