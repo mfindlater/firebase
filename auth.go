@@ -67,7 +67,8 @@ type ApplicationVerifier struct {
 	*js.Object
 }
 
-type AuthCodeInfo struct {
+type ActionCodeInfo struct {
+	*js.Object
 	Operation Operation `js:"operation"`
 	Data      struct {
 		Email     string `js:"email"`
@@ -83,86 +84,106 @@ type Auth struct {
 	LanguageCode string      `js:"languageCode"`
 }
 
-func (a *Auth) ApplyActionCode(code string) *Promise {
-	return &Promise{Object: a.Call("applyActionCode", code)}
+func (a *Auth) ApplyActionCode(code string) error {
+	return (&Promise{Object: a.Call("applyActionCode", code)}).Convert()
 }
 
-func (a *Auth) CheckActionCode(code string) *Promise {
-	return &Promise{Object: a.Call("checkActionCode", code)}
+func (a *Auth) CheckActionCode(code string) (*ActionCodeInfo, error) {
+	o, err := (&Promise{Object: a.Call("checkActionCode", code)}).ConvertWithResult()
+	return &ActionCodeInfo{Object: o}, err
 }
 
-func (a *Auth) ConfirmPasswordReset(code string, newPassword string) *Promise {
-	return &Promise{Object: a.Call("confirmPasswordReset", code, newPassword)}
+func (a *Auth) ConfirmPasswordReset(code string, newPassword string) error {
+	return (&Promise{Object: a.Call("confirmPasswordReset", code, newPassword)}).Convert()
 }
 
-func (a *Auth) CreateUserAndRetrieveDataWithEmailAndPassword(email string, password string) *Promise {
-	return &Promise{Object: a.Call("ceateUserAndRetrieveDataWithEmailAndPassword", email, password)}
+func (a *Auth) CreateUserAndRetrieveDataWithEmailAndPassword(email string, password string) (*UserCredential, error) {
+	o, err := (&Promise{Object: a.Call("ceateUserAndRetrieveDataWithEmailAndPassword", email, password)}).ConvertWithResult()
+	return &UserCredential{Object: o}, err
 }
 
-func (a *Auth) CreateUserWithEmailAndPassword(email string, password string) *Promise {
-	return &Promise{Object: a.Call("createUserWithEmailAndPassword", email, password)}
+func (a *Auth) CreateUserWithEmailAndPassword(email string, password string) (*User, error) {
+	o, err := (&Promise{Object: a.Call("createUserWithEmailAndPassword", email, password)}).ConvertWithResult()
+	u := &User{}
+	u.UserInfo.Object = o
+	return u, err
 }
 
-func (a *Auth) FetchProvidersForEmail(email string) *Promise {
-	return &Promise{Object: a.Call("fetchProvidersForEmail", email)}
+func (a *Auth) FetchProvidersForEmail(email string) (*js.Object, error) {
+	return (&Promise{Object: a.Call("fetchProvidersForEmail", email)}).ConvertWithResult()
 }
 
-func (a *Auth) OnAuthStateChanged(args ...interface{}) *Promise {
-	return &Promise{Object: a.Call("onAuthStateChanged", args)}
+func (a *Auth) OnAuthStateChanged(next func(*User), args ...interface{}) *js.Object {
+	return a.Call("onAuthStateChanged", next, args)
 }
 
-func (a *Auth) OnIDTokenChanged(args ...interface{}) *Promise {
-	return &Promise{Object: a.Call("onIdTokenChanged", args)}
+func (a *Auth) OnIDTokenChanged(next func(*User), args ...interface{}) *js.Object {
+	return a.Call("onIdTokenChanged", next, args)
 }
 
-func (a *Auth) SendPasswordResetEmail(email, actionCodeSettings string) *Promise {
-	return &Promise{Object: a.Call("sendPasswordResetEmail", email, actionCodeSettings)}
+func (a *Auth) SendPasswordResetEmail(email, actionCodeSettings string) error {
+	return (&Promise{Object: a.Call("sendPasswordResetEmail", email, actionCodeSettings)}).Convert()
 }
 
-func (a *Auth) SetPersistence(persistence Persistence) *Promise {
-	return &Promise{Object: a.Call("setPersistence", persistence)}
+func (a *Auth) SetPersistence(persistence Persistence) error {
+	return (&Promise{Object: a.Call("setPersistence", persistence)}).Convert()
 }
 
-func (a *Auth) SignInAndRetrieveDataWithCredential(credential *AuthCredential) *Promise {
-	return &Promise{Object: a.Call("signInAndRetrieveDataWithCredential", credential)}
+func (a *Auth) SignInAndRetrieveDataWithCredential(credential *AuthCredential) (*UserCredential, error) {
+	o, err := (&Promise{Object: a.Call("signInAndRetrieveDataWithCredential", credential)}).ConvertWithResult()
+	return &UserCredential{Object: o}, err
 }
 
-func (a *Auth) SignInAndRetrieveDataWithCustomToken(token string) *Promise {
-	return &Promise{Object: a.Call("signInAndRetrieveDataWithCustomToken", token)}
+func (a *Auth) SignInAndRetrieveDataWithCustomToken(token string) (*UserCredential, error) {
+	o, err := (&Promise{Object: a.Call("signInAndRetrieveDataWithCustomToken", token)}).ConvertWithResult()
+	return &UserCredential{Object: o}, err
 }
 
-func (a *Auth) SignInAndRetrieveDataWithEmailAndPassword(email, password string) *Promise {
-	return &Promise{Object: a.Call("signInAndRetrieveDataWithEmailAndPassword", email, password)}
+func (a *Auth) SignInAndRetrieveDataWithEmailAndPassword(email, password string) (*UserCredential, error) {
+	o, err := (&Promise{Object: a.Call("signInAndRetrieveDataWithEmailAndPassword", email, password)}).ConvertWithResult()
+	return &UserCredential{Object: o}, err
 }
 
-func (a *Auth) SignInAnonymously() *Promise {
-	return &Promise{Object: a.Call("signInAnonymously")}
+func (a *Auth) SignInAnonymously() (*User, error) {
+	o, err := (&Promise{Object: a.Call("signInAnonymously")}).ConvertWithResult()
+	u := &User{}
+	u.UserInfo = &UserInfo{Object: o}
+	return u, err
 }
 
-func (a *Auth) SignInAnonymouslyAndRetrieveData() *Promise {
-	return &Promise{Object: a.Call("signInAnonymouslyAndRetrieveData")}
+func (a *Auth) SignInAnonymouslyAndRetrieveData() (*UserCredential, error) {
+	o, err := (&Promise{Object: a.Call("signInAnonymouslyAndRetrieveData")}).ConvertWithResult()
+	return &UserCredential{Object: o}, err
 }
 
-func (a *Auth) SignInWithCustomToken(token string) *Promise {
-	return &Promise{Object: a.Call("signInWithCustomToken", token)}
+func (a *Auth) SignInWithCustomToken(token string) (*User, error) {
+	o, err := (&Promise{Object: a.Call("signInWithCustomToken", token)}).ConvertWithResult()
+	u := &User{}
+	u.UserInfo = &UserInfo{Object: o}
+	return u, err
 }
 
-func (a *Auth) SignInWithEmailAndPassword(email, password string) *Promise {
-	return &Promise{Object: a.Call("signInWithEmailAndPassword")}
+func (a *Auth) SignInWithEmailAndPassword(email, password string) (*User, error) {
+	o, err := (&Promise{Object: a.Call("signInWithEmailAndPassword", email, password)}).ConvertWithResult()
+	u := &User{}
+	u.UserInfo = &UserInfo{Object: o}
+	return u, err
 }
 
-func (a *Auth) SignInWithPhoneNumber(phoneNumber string, applicationVerifier *ApplicationVerifier) *Promise {
-	return &Promise{Object: a.Call("signInWithPhoneNumber")}
+func (a *Auth) SignInWithPhoneNumber(phoneNumber string, applicationVerifier *ApplicationVerifier) (*ConfirmationResult, error) {
+	o, err := (&Promise{Object: a.Call("signInWithPhoneNumber", phoneNumber, applicationVerifier)}).ConvertWithResult()
+	return &ConfirmationResult{Object: o}, err
 }
 
-func (a *Auth) SignOut() *Promise {
-	return &Promise{Object: a.Call("signOut")}
+func (a *Auth) SignOut() error {
+	return (&Promise{Object: a.Call("signOut")}).Convert()
 }
 
 func (a *Auth) UseDeviceLanguage() {
 	a.Call("useDeviceLanguage")
 }
 
-func (a *Auth) VerifyPasswordResetCode(code string) *Promise {
-	return &Promise{Object: a.Call("verifyPasswordResetCode", code)}
+func (a *Auth) VerifyPasswordResetCode(code string) (string, error) {
+	o, err := (&Promise{Object: a.Call("verifyPasswordResetCode", code)}).ConvertWithResult()
+	return o.String(), err
 }

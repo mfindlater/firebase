@@ -36,3 +36,37 @@ func (p *Promise) Then(args ...interface{}) *Promise {
 
 	return &Promise{p.Call("then")}
 }
+
+func (p *Promise) Convert() error {
+	c := make(chan *Error)
+
+	go func() {
+		p.Then(func() {
+			c <- nil
+		}).Catch(func(e *Error) {
+			c <- e
+		})
+	}()
+
+	return <-c
+}
+
+type result struct {
+	value *js.Object
+	err   *Error
+}
+
+func (p *Promise) ConvertWithResult() (*js.Object, error) {
+	c := make(chan result)
+
+	go func() {
+		p.Then(func(o *js.Object) {
+			c <- result{value: o, err: nil}
+		}).Catch(func(e *Error) {
+			c <- result{value: nil, err: e}
+		})
+	}()
+
+	out := <-c
+	return out.value, out.err
+}
